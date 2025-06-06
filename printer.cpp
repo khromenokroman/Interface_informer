@@ -445,4 +445,64 @@ void ShowInfoInterface::show() const {
         std::cout << "\n";
     }
 }
+void ShowInfoInterface::showInterface(const std::string& interface_name) const {
+    // Получаем индекс интерфейса по имени
+    int ifindex = getInterfaceIndex(interface_name);
+
+    // Показываем информацию об интерфейсе
+    showInterfaceByIndex(ifindex);
+}
+
+int ShowInfoInterface::getInterfaceIndex(const std::string& interface_name) const {
+    for (auto obj = nl_cache_get_first(m_link_data.get()); obj; obj = nl_cache_get_next(obj)) {
+        auto const link = reinterpret_cast<struct rtnl_link *>(obj);
+        const char* if_name = rtnl_link_get_name(link);
+
+        if (if_name && interface_name == if_name) {
+            return rtnl_link_get_ifindex(link);
+        }
+    }
+
+    // Если интерфейс не найден, выбрасываем исключение
+    throw exceptions::InterfaceNotFound(fmt::format("Интерфейс '{}' не найден", interface_name));
+}
+
+void ShowInfoInterface::showInterfaceByIndex(int ifindex) const {
+    // Ищем интерфейс по индексу
+    rtnl_link* link = nullptr;
+    for (auto obj = nl_cache_get_first(m_link_data.get()); obj; obj = nl_cache_get_next(obj)) {
+        auto current_link = reinterpret_cast<struct rtnl_link *>(obj);
+        if (rtnl_link_get_ifindex(current_link) == ifindex) {
+            link = current_link;
+            break;
+        }
+    }
+
+    if (!link) {
+        throw exceptions::InterfaceNotFound(fmt::format("Интерфейс с индексом {} не найден", ifindex));
+    }
+
+    // Выводим информацию об интерфейсе
+    print_interface_details(link);
+
+    std::cout << "\nIP-АДРЕСА:" << std::endl;
+    bool has_addresses = false;
+
+    for (auto addr_obj = nl_cache_get_first(m_addr_data.get()); addr_obj; addr_obj = nl_cache_get_next(addr_obj)) {
+        if (auto const addr = reinterpret_cast<struct rtnl_addr *>(addr_obj); rtnl_addr_get_ifindex(addr) == ifindex) {
+            print_address_info(addr);
+            has_addresses = true;
+        }
+    }
+
+    if (!has_addresses) {
+        std::cout << "  Нет IP-адресов" << std::endl;
+    }
+
+    print_neighbour_info(ifindex);
+    print_routes_for_interface(ifindex);
+
+    std::cout << "\n";
+}
+
 } // namespace os::network

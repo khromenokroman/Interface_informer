@@ -25,6 +25,7 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PRIVATE
         ${LIBNL_LIBRARIES}
         fmt::fmt
+        boost_program_options
 )
 
 install(TARGETS ${PROJECT_NAME}

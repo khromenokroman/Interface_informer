@@ -33,6 +33,9 @@ struct GetDataRoute final : NetlinkEx {
 struct GetDataNeigh final : NetlinkEx {
     using NetlinkEx::NetlinkEx;
 };
+struct InterfaceNotFound final : NetlinkEx {
+    using NetlinkEx::NetlinkEx;
+};
 } // namespace exceptions
 
 class ShowInfoInterface {
@@ -52,6 +55,27 @@ class ShowInfoInterface {
     void print_neighbour_info(int ifindex) const;
     void print_routes_for_interface(int ifindex) const;
     void show() const;
+
+    /**
+     * @brief Показывает информацию только для указанного интерфейса
+     * @param interface_name Имя интерфейса
+     * @throw exceptions::InterfaceNotFound если интерфейс не найден
+     */
+    void showInterface(const std::string& interface_name) const;
+
+    /**
+     * @brief Получает индекс интерфейса по его имени
+     * @param interface_name Имя интерфейса
+     * @return Индекс интерфейса
+     * @throw exceptions::InterfaceNotFound если интерфейс не найден
+     */
+    [[nodiscard]] int getInterfaceIndex(const std::string& interface_name) const;
+
+    /**
+     * @brief Показать детальную информацию о конкретном интерфейсе
+     * @param ifindex Индекс интерфейса
+     */
+    void showInterfaceByIndex(int ifindex) const;
 
    private:
     std::unique_ptr<nl_sock, decltype(&nl_socket_free)> m_netlink_socket; // 8
