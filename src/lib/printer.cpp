@@ -12,6 +12,16 @@
 
 namespace os::network {
 
+InformerNetlink *InformerNetlink::create(char *error_message) noexcept {
+    try {
+        auto *new_object = new ShowInfoInterface();
+        return new_object;
+    } catch (std::exception const &ex) {
+        ::snprintf(error_message, M_MAX_BUFFER_SIZE, "Cannot create new object %s", ex.what());
+        return nullptr;
+    }
+}
+
 ShowInfoInterface::ShowInfoInterface()
     : m_netlink_socket{nl_socket_alloc(), nl_socket_free},
       m_link_data{nullptr, nl_cache_free},
@@ -49,6 +59,15 @@ ShowInfoInterface::ShowInfoInterface()
         throw exceptions::GetDataNeigh("Allocate neighbour cache");
     }
     m_neigh_data.reset(tmp_neigh_data);
+}
+nlohmann::json ShowInfoInterface::get_interface_info(std::string const &interface_name, std::string const &ns) {
+    try {
+        showInterface(interface_name);
+
+        return m_json;
+    } catch (std::exception const &ex) {
+        return {{"error", ex.what()}};
+    }
 }
 std::string ShowInfoInterface::arp_hrd_type_to_string(unsigned int const type) {
     switch (type) {
@@ -94,57 +113,114 @@ void ShowInfoInterface::print_interface_details(rtnl_link *link) {
 
     std::cout << "\n==================================================================" << std::endl;
     std::cout << "ИНТЕРФЕЙС: " << if_name << std::endl;
+    m_json.interface = if_name;
     std::cout << "==================================================================" << std::endl;
 
     std::cout << "ОСНОВНАЯ ИНФОРМАЦИЯ:" << std::endl;
     std::cout << "  Индекс: " << rtnl_link_get_ifindex(link) << std::endl;
+    m_json.general.index = rtnl_link_get_ifindex(link);
 
     unsigned int const flags = rtnl_link_get_flags(link);
     std::cout << "  Состояние: " << ((flags & IFF_UP) ? "АКТИВЕН (UP)" : "НЕАКТИВЕН (DOWN)") << std::endl;
+    m_json.general.state = ((flags & IFF_UP) ? "UP" : "DOWN");
 
     std::cout << "  Тип интерфейса: ";
-    if (flags & IFF_LOOPBACK)
+    if (flags & IFF_LOOPBACK) {
         std::cout << "LOOPBACK";
-    else if (flags & IFF_BROADCAST)
+        m_json.general.type = "LOOPBACK";
+    } else if (flags & IFF_BROADCAST) {
         std::cout << "BROADCAST";
-    else if (flags & IFF_POINTOPOINT)
+        m_json.general.type = "BROADCAST";
+    } else if (flags & IFF_POINTOPOINT) {
         std::cout << "POINT-TO-POINT";
-    else
+        m_json.general.type = "POINT-TO-POINT";
+    } else {
         std::cout << "UNKNOWN";
+        m_json.general.type = "UNKNOWN";
+    }
     std::cout << std::endl;
 
     std::cout << "  Флаги: ";
-    if (flags & IFF_UP) std::cout << "UP ";
-    if (flags & IFF_BROADCAST) std::cout << "BROADCAST ";
-    if (flags & IFF_DEBUG) std::cout << "DEBUG ";
-    if (flags & IFF_LOOPBACK) std::cout << "LOOPBACK ";
-    if (flags & IFF_POINTOPOINT) std::cout << "POINTOPOINT ";
-    if (flags & IFF_RUNNING) std::cout << "RUNNING ";
-    if (flags & IFF_NOARP) std::cout << "NOARP ";
-    if (flags & IFF_PROMISC) std::cout << "PROMISC ";
-    if (flags & IFF_ALLMULTI) std::cout << "ALLMULTI ";
-    if (flags & IFF_MASTER) std::cout << "MASTER ";
-    if (flags & IFF_SLAVE) std::cout << "SLAVE ";
-    if (flags & IFF_MULTICAST) std::cout << "MULTICAST ";
-    if (flags & IFF_PORTSEL) std::cout << "PORTSEL ";
-    if (flags & IFF_AUTOMEDIA) std::cout << "AUTOMEDIA ";
-    if (flags & IFF_DYNAMIC) std::cout << "DYNAMIC ";
+    if (flags & IFF_UP) {
+        std::cout << "UP ";
+        m_json.general.flags.emplace_back("UP");
+    }
+    if (flags & IFF_BROADCAST) {
+        std::cout << "BROADCAST ";
+        m_json.general.flags.emplace_back("BROADCAST");
+    }
+    if (flags & IFF_DEBUG) {
+        std::cout << "DEBUG ";
+        m_json.general.flags.emplace_back("DEBUG");
+    }
+    if (flags & IFF_LOOPBACK) {
+        std::cout << "LOOPBACK ";
+        m_json.general.flags.emplace_back("LOOPBACK");
+    }
+    if (flags & IFF_POINTOPOINT) {
+        std::cout << "POINTOPOINT ";
+        m_json.general.flags.emplace_back("POINTOPOINT");
+    }
+    if (flags & IFF_RUNNING) {
+        std::cout << "RUNNING ";
+        m_json.general.flags.emplace_back("RUNNING");
+    }
+    if (flags & IFF_NOARP) {
+        std::cout << "NOARP ";
+        m_json.general.flags.emplace_back("NOARP");
+    }
+    if (flags & IFF_PROMISC) {
+        std::cout << "PROMISC ";
+        m_json.general.flags.emplace_back("PROMISC");
+    }
+    if (flags & IFF_ALLMULTI) {
+        std::cout << "ALLMULTI ";
+        m_json.general.flags.emplace_back("ALLMULTI");
+    }
+    if (flags & IFF_MASTER) {
+        std::cout << "MASTER ";
+        m_json.general.flags.emplace_back("MASTER");
+    }
+    if (flags & IFF_SLAVE) {
+        std::cout << "SLAVE ";
+        m_json.general.flags.emplace_back("SLAVE");
+    }
+    if (flags & IFF_MULTICAST) {
+        std::cout << "MULTICAST ";
+        m_json.general.flags.emplace_back("MULTICAST");
+    }
+    if (flags & IFF_PORTSEL) {
+        std::cout << "PORTSEL ";
+        m_json.general.flags.emplace_back("PORTSEL");
+    }
+    if (flags & IFF_AUTOMEDIA) {
+        std::cout << "AUTOMEDIA ";
+        m_json.general.flags.emplace_back("AUTOMEDIA");
+    }
+    if (flags & IFF_DYNAMIC) {
+        std::cout << "DYNAMIC ";
+        m_json.general.flags.emplace_back("DYNAMIC");
+    }
     std::cout << std::endl;
 
     std::cout << "\nАППАРАТНАЯ ИНФОРМАЦИЯ:" << std::endl;
     unsigned int const arp_type = rtnl_link_get_arptype(link);
     std::cout << "  Тип аппаратного адреса: " << arp_hrd_type_to_string(arp_type) << std::endl;
+    m_json.hw.type = arp_hrd_type_to_string(arp_type);
 
     if (auto const hw_addr = rtnl_link_get_addr(link)) {
         char mac_str[20];
         nl_addr2str(hw_addr, mac_str, sizeof(mac_str));
         std::cout << "  MAC-адрес: " << mac_str << std::endl;
+        m_json.hw.mac.emplace_back(mac_str);
     }
 
     std::cout << "  MTU: " << rtnl_link_get_mtu(link) << " байт" << std::endl;
+    m_json.hw.mtu = rtnl_link_get_mtu(link);
 
-    if (int const txq_len = rtnl_link_get_txqlen(link); txq_len >= 0) {
+    if (unsigned int const txq_len = rtnl_link_get_txqlen(link); txq_len >= 0) {
         std::cout << "  Длина очереди передачи: " << txq_len << std::endl;
+        m_json.hw.size_queue = txq_len;
     }
 
     unsigned int const oper_state = rtnl_link_get_operstate(link);
@@ -153,27 +229,35 @@ void ShowInfoInterface::print_interface_details(rtnl_link *link) {
     switch (oper_state) {
         case IF_OPER_UNKNOWN:
             std::cout << "UNKNOWN";
+            m_json.operational_status.oper_state = "UNKNOWN";
             break;
         case IF_OPER_NOTPRESENT:
             std::cout << "NOT PRESENT";
+            m_json.operational_status.oper_state = "NOT PRESENT";
             break;
         case IF_OPER_DOWN:
             std::cout << "DOWN";
+            m_json.operational_status.oper_state = "DOWN";
             break;
         case IF_OPER_LOWERLAYERDOWN:
             std::cout << "LOWER LAYER DOWN";
+            m_json.operational_status.oper_state = "LOWER LAYER DOWN";
             break;
         case IF_OPER_TESTING:
             std::cout << "TESTING";
+            m_json.operational_status.oper_state = "TESTING";
             break;
         case IF_OPER_DORMANT:
             std::cout << "DORMANT";
+            m_json.operational_status.oper_state = "DORMANT";
             break;
         case IF_OPER_UP:
             std::cout << "UP";
+            m_json.operational_status.oper_state = "UP";
             break;
         default:
             std::cout << "UNDEFINED (" << oper_state << ")";
+            m_json.operational_status.oper_state = "UNDEFINED";
     }
     std::cout << std::endl;
 
@@ -182,12 +266,15 @@ void ShowInfoInterface::print_interface_details(rtnl_link *link) {
     switch (link_mode) {
         case IF_LINK_MODE_DEFAULT:
             std::cout << "DEFAULT";
+            m_json.operational_status.link_mode = "DEFAULT";
             break;
         case IF_LINK_MODE_DORMANT:
             std::cout << "DORMANT";
+            m_json.operational_status.link_mode = "DORMANT";
             break;
         default:
             std::cout << "UNKNOWN (" << link_mode << ")";
+            m_json.operational_status.link_mode = "UNKNOWN";
     }
     std::cout << std::endl;
 
@@ -208,7 +295,9 @@ void ShowInfoInterface::print_interface_details(rtnl_link *link) {
 
     std::cout << "\nПРОТОКОЛЫ:" << std::endl;
     std::cout << "  Маршрутизация IPv4: " << ((flags & IFF_NOARP) ? "Выключена" : "Включена") << std::endl;
+    m_json.protocols.routing_ipv4 = (flags & IFF_NOARP) ? false : true;
     std::cout << "  Multicast: " << ((flags & IFF_MULTICAST) ? "Включен" : "Выключен") << std::endl;
+    m_json.protocols.multicast = (flags & IFF_MULTICAST) ? true : false;
 }
 void ShowInfoInterface::print_address_info(rtnl_addr *addr) {
     auto const local = rtnl_addr_get_local(addr);
@@ -269,7 +358,7 @@ void ShowInfoInterface::print_address_info(rtnl_addr *addr) {
         std::cout << "    Peer: " << ip_str << std::endl;
     }
 }
-void ShowInfoInterface::print_neighbour_info(int const ifindex) const {
+void ShowInfoInterface::print_neighbour_info(int const ifindex) {
     bool has_neighbours = false;
 
     for (auto obj = nl_cache_get_first(m_neigh_data.get()); obj; obj = nl_cache_get_next(obj)) {
@@ -319,7 +408,7 @@ void ShowInfoInterface::print_neighbour_info(int const ifindex) const {
         std::cout << "\nТАБЛИЦА СОСЕДЕЙ: Нет записей" << std::endl;
     }
 }
-void ShowInfoInterface::print_routes_for_interface(int const ifindex) const {
+void ShowInfoInterface::print_routes_for_interface(int const ifindex) {
     bool has_routes = false;
 
     for (auto obj = nl_cache_get_first(m_route_data.get()); obj; obj = nl_cache_get_next(obj)) {
@@ -416,7 +505,7 @@ void ShowInfoInterface::print_routes_for_interface(int const ifindex) const {
         std::cout << "\nТАБЛИЦА МАРШРУТИЗАЦИИ: Нет маршрутов" << std::endl;
     }
 }
-void ShowInfoInterface::show() const {
+void ShowInfoInterface::show() {
     for (auto obj = nl_cache_get_first(m_link_data.get()); obj; obj = nl_cache_get_next(obj)) {
         auto const link = reinterpret_cast<struct rtnl_link *>(obj);
 
@@ -445,18 +534,20 @@ void ShowInfoInterface::show() const {
         std::cout << "\n";
     }
 }
-void ShowInfoInterface::showInterface(const std::string& interface_name) const {
+void ShowInfoInterface::showInterface(const std::string &interface_name) {
     // Получаем индекс интерфейса по имени
     int ifindex = getInterfaceIndex(interface_name);
 
     // Показываем информацию об интерфейсе
     showInterfaceByIndex(ifindex);
+    // nlohmann::json j = m_json;
+    // std::cout << "JSON: " << j.dump(4) << std::endl;
 }
 
-int ShowInfoInterface::getInterfaceIndex(const std::string& interface_name) const {
+int ShowInfoInterface::getInterfaceIndex(const std::string &interface_name) {
     for (auto obj = nl_cache_get_first(m_link_data.get()); obj; obj = nl_cache_get_next(obj)) {
         auto const link = reinterpret_cast<struct rtnl_link *>(obj);
-        const char* if_name = rtnl_link_get_name(link);
+        const char *if_name = rtnl_link_get_name(link);
 
         if (if_name && interface_name == if_name) {
             return rtnl_link_get_ifindex(link);
@@ -467,9 +558,9 @@ int ShowInfoInterface::getInterfaceIndex(const std::string& interface_name) cons
     throw exceptions::InterfaceNotFound(fmt::format("Интерфейс '{}' не найден", interface_name));
 }
 
-void ShowInfoInterface::showInterfaceByIndex(int ifindex) const {
+void ShowInfoInterface::showInterfaceByIndex(int ifindex) {
     // Ищем интерфейс по индексу
-    rtnl_link* link = nullptr;
+    rtnl_link *link = nullptr;
     for (auto obj = nl_cache_get_first(m_link_data.get()); obj; obj = nl_cache_get_next(obj)) {
         auto current_link = reinterpret_cast<struct rtnl_link *>(obj);
         if (rtnl_link_get_ifindex(current_link) == ifindex) {
@@ -495,13 +586,19 @@ void ShowInfoInterface::showInterfaceByIndex(int ifindex) const {
         }
     }
 
+    // nlohmann::json j = m_json;
+    // std::cout << "JSON: " << j.dump(4) << std::endl;
+
     if (!has_addresses) {
         std::cout << "  Нет IP-адресов" << std::endl;
     }
 
     print_neighbour_info(ifindex);
+    // nlohmann::json j = m_json;
+    // std::cout << "JSON: " << j.dump(4) << std::endl;
     print_routes_for_interface(ifindex);
-
+    // nlohmann::json j = m_json;
+    // std::cout << "JSON: " << j.dump(4) << std::endl;
     std::cout << "\n";
 }
 

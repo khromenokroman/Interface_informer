@@ -148,3 +148,11 @@ IP-АДРЕСА:
     Broadcast: 192.168.1.255
   IPv6: fe80::211:22ff:fe33:4455/64 [PERMANENT]
 ````
+
+````bash
+ip netns exec sample ip link set veth1 name eth0
+ip netns exec sample ip link set lo up
+ip netns exec sample ip link set eth0 up
+ip netns exec sample ip addr add 192.168.100.2/24 dev eth0
+ip netns exec sample ip route add default via 192.168.100.1
+````
