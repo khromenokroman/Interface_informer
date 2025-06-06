@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.25)
 project(printer
         VERSION 0.0.1
         LANGUAGES CXX
@@ -17,9 +17,9 @@ include_directories(${LIBNL_INCLUDE_DIRS})
 link_directories(${LIBNL_LIBRARY_DIRS})
 
 add_executable(${PROJECT_NAME}
-        main.cpp
-        switch_ns.cpp
-        printer.cpp
+        src/main.cpp
+        src/switch_ns.cpp
+        src/printer.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
