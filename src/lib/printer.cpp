@@ -266,8 +266,15 @@ void ShowInfoInterface::print_interface_details(rtnl_link *link) {
             m_json.operational_status.link_mode = "UNKNOWN";
     }
 
-    // uint64_t const rx_bytes = rtnl_link_get_stat(link, RTNL_LINK_RX_BYTES);
-    // uint64_t const tx_bytes = rtnl_link_get_stat(link, RTNL_LINK_TX_BYTES);
+    m_json.rx.bytes = rtnl_link_get_stat(link, RTNL_LINK_RX_BYTES);
+    m_json.rx.packets = rtnl_link_get_stat(link, RTNL_LINK_RX_PACKETS);
+    m_json.rx.errors = rtnl_link_get_stat(link, RTNL_LINK_RX_ERRORS);
+    m_json.rx.drops = rtnl_link_get_stat(link, RTNL_LINK_RX_DROPPED);
+
+    m_json.tx.bytes = rtnl_link_get_stat(link, RTNL_LINK_TX_BYTES);
+    m_json.tx.packets = rtnl_link_get_stat(link, RTNL_LINK_TX_PACKETS);
+    m_json.tx.errors = rtnl_link_get_stat(link, RTNL_LINK_TX_ERRORS);
+    m_json.tx.drops = rtnl_link_get_stat(link, RTNL_LINK_TX_DROPPED);
 
     m_json.protocols.routing_ipv4 = (flags & IFF_NOARP) ? false : true;
     m_json.protocols.multicast = (flags & IFF_MULTICAST) ? true : false;

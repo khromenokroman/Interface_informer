@@ -15,6 +15,18 @@
 namespace os::network {
 
 /**
+ * @struct Packetometr
+ * @brief Статистика сетевого трафика интерфейса
+ */
+struct Packetometr {
+    uint64_t bytes{};   /**< Количество байт (8 байт) */
+    uint64_t packets{}; /**< Количество пакетов (8 байт) */
+    uint64_t errors{};  /**< Количество ошибок (8 байт) */
+    uint64_t drops{};   /**< Количество отброшенных пакетов (8 байт) */
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Packetometr, bytes, packets, errors, drops);
+
+/**
  * @struct Neigh
  * @brief Структура для хранения информации о соседях (ARP/NDP таблица)
  */
@@ -32,9 +44,9 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Neigh, ip, mac, type);
 struct Routes {
     std::string destination{}; /**< Адрес назначения маршрута */
     std::string gateway{};     /**< Шлюз для маршрута */
+    std::string type{};        /**< Тип маршрута (UNICAST, LOCAL, BROADCAST и т.д.) */
     uint32_t metric{};         /**< Метрика маршрута */
     uint32_t table{};          /**< Таблица маршрутизации */
-    std::string type{};        /**< Тип маршрута (UNICAST, LOCAL, BROADCAST и т.д.) */
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Routes, destination, gateway, metric, table, type);
 
@@ -45,12 +57,12 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Routes, destination, gateway, metric, table, 
 struct Ip {
     std::string type{};               /**< Тип IP-адреса (IPv4 или IPv6) */
     std::string ip{};                 /**< IP-адрес с маской подсети */
-    int masc{};                       /**< Маска подсети в формате CIDR */
-    std::vector<std::string> flags{}; /**< Флаги IP-адреса (PERMANENT, SECONDARY и т.д.) */
-    uint32_t valid_lft{};             /**< Срок действия адреса (valid lifetime) */
-    uint32_t pref_lft{};              /**< Предпочтительный срок действия (preferred lifetime) */
     std::string broadcast{};          /**< Широковещательный адрес (для IPv4) */
     std::string peer{};               /**< Адрес пира (для point-to-point интерфейсов) */
+    std::vector<std::string> flags{}; /**< Флаги IP-адреса (PERMANENT, SECONDARY и т.д.) */
+    int masc{};                       /**< Маска подсети в формате CIDR */
+    uint32_t valid_lft{};             /**< Срок действия адреса (valid lifetime) */
+    uint32_t pref_lft{};              /**< Предпочтительный срок действия (preferred lifetime) */
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Ip, type, ip, masc, flags, valid_lft, pref_lft, broadcast, peer);
 
@@ -91,10 +103,10 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(HW, type, mac, mtu, size_queue);
  * @brief Структура для хранения общей информации об интерфейсе
  */
 struct General {
-    int index{};                      /**< Индекс интерфейса */
     std::string state{};              /**< Состояние интерфейса (UP/DOWN) */
     std::string type{};               /**< Тип интерфейса (BROADCAST, LOOPBACK и т.д.) */
     std::vector<std::string> flags{}; /**< Флаги интерфейса */
+    int index{};                      /**< Индекс интерфейса */
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(General, index, state, type, flags);
 
@@ -103,16 +115,18 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(General, index, state, type, flags);
  * @brief Структура для формирования полного JSON-ответа с информацией об интерфейсе
  */
 struct Json {
-    std::string interface{};                /**< Имя интерфейса */
-    General general{};                      /**< Общая информация об интерфейсе */
-    HW hw{};                                /**< Аппаратная информация */
-    OperationalStatus operational_status{}; /**< Операционный статус */
-    Protocols protocols{};                  /**< Поддерживаемые протоколы */
-    std::vector<Ip> ip{};                   /**< Список IP-адресов */
-    std::vector<Routes> routes{};           /**< Список маршрутов */
-    std::vector<Neigh> neigh{};             /**< Список соседей (ARP/NDP) */
+    General general{};                      /**< Общая информация об интерфейсе (96 байт)*/
+    HW hw{};                                /**< Аппаратная информация (72 байт) */
+    OperationalStatus operational_status{}; /**< Операционный статус (64 байт) */
+    std::string interface{};                /**< Имя интерфейса (32 байт) */
+    Packetometr tx{};                       /**< Статистика отправки (32 байт) */
+    Packetometr rx{};                       /**< Статистика приёма (32 байт) */
+    std::vector<Ip> ip{};                   /**< Список IP-адресов (24 байт) */
+    std::vector<Routes> routes{};           /**< Список маршрутов (24 байт) */
+    std::vector<Neigh> neigh{};             /**< Список соседей (ARP/NDP) (24 байт) */
+    Protocols protocols{};                  /**< Поддерживаемые протоколы (2 байт) */
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Json, interface, general, hw, operational_status, protocols, ip, routes, neigh);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Json, interface, general, hw, operational_status, protocols, ip, routes, neigh, tx, rx);
 
 namespace exceptions {
 /**

@@ -30,6 +30,10 @@
   - IP-адреса (поддержка IPv4 и IPv6) с дополнительной информацией (флаги, срок действия, широковещательные адреса)
   - Таблица соседей (кэш ARP/NDP) с информацией о состоянии связей
   - Таблица маршрутизации с детализацией по интерфейсам
+  - **Детальная статистика сетевого трафика**:
+    - Полученные (RX) и отправленные (TX) байты, пакеты
+    - Информация об ошибках и отброшенных пакетах
+    - Счетчики производительности для анализа работы интерфейса
 
 - **Управление сетевыми интерфейсами**:
     - Включение (активация) сетевых интерфейсов
@@ -213,7 +217,7 @@ All interfaces (main):
         "br-cc1332e4f8fd",
         "veth0",
         "docker0",
-        "roma-bk"
+        "tun0"
     ]
 }
 
@@ -230,11 +234,12 @@ Show info for 'eth0' in namespace 'sample'
 {
     "general": {
         "flags": [
+            "UP",
             "BROADCAST",
             "MULTICAST"
         ],
         "index": 493,
-        "state": "DOWN",
+        "state": "UP",
         "type": "BROADCAST"
     },
     "hw": {
@@ -263,7 +268,7 @@ Show info for 'eth0' in namespace 'sample'
     "neigh": [],
     "operational_status": {
         "link_mode": "DEFAULT",
-        "oper_state": "DOWN"
+        "oper_state": "LOWER LAYER DOWN"
     },
     "protocols": {
         "multicast": true,
@@ -271,22 +276,48 @@ Show info for 'eth0' in namespace 'sample'
     },
     "routes": [
         {
+            "destination": "192.168.100.0/24",
+            "gateway": "direct",
+            "metric": 0,
+            "table": 254,
+            "type": "UNICAST"
+        },
+        {
             "destination": "192.168.100.2",
             "gateway": "direct",
             "metric": 0,
             "table": 255,
             "type": "LOCAL"
+        },
+        {
+            "destination": "192.168.100.255",
+            "gateway": "direct",
+            "metric": 0,
+            "table": 255,
+            "type": "BROADCAST"
         }
-    ]
+    ],
+    "rx": {
+        "bytes": 0,
+        "drops": 0,
+        "errors": 0,
+        "packets": 0
+    },
+    "tx": {
+        "bytes": 0,
+        "drops": 0,
+        "errors": 0,
+        "packets": 0
+    }
 }
 
 Disable interface 'eth0' in namespace 'sample'
 
 Show info for 'eth0' in namespace 'sample'
-
 {
     "general": {
         "flags": [
+            "UP",
             "BROADCAST",
             "MULTICAST",
             "BROADCAST",
@@ -343,11 +374,11 @@ Show info for 'eth0' in namespace 'sample'
     },
     "routes": [
         {
-            "destination": "192.168.100.2",
+            "destination": "192.168.100.0/24",
             "gateway": "direct",
             "metric": 0,
-            "table": 255,
-            "type": "LOCAL"
+            "table": 254,
+            "type": "UNICAST"
         },
         {
             "destination": "192.168.100.2",
@@ -355,7 +386,47 @@ Show info for 'eth0' in namespace 'sample'
             "metric": 0,
             "table": 255,
             "type": "LOCAL"
+        },
+        {
+            "destination": "192.168.100.255",
+            "gateway": "direct",
+            "metric": 0,
+            "table": 255,
+            "type": "BROADCAST"
+        },
+        {
+            "destination": "192.168.100.0/24",
+            "gateway": "direct",
+            "metric": 0,
+            "table": 254,
+            "type": "UNICAST"
+        },
+        {
+            "destination": "192.168.100.2",
+            "gateway": "direct",
+            "metric": 0,
+            "table": 255,
+            "type": "LOCAL"
+        },
+        {
+            "destination": "192.168.100.255",
+            "gateway": "direct",
+            "metric": 0,
+            "table": 255,
+            "type": "BROADCAST"
         }
-    ]
+    ],
+    "rx": {
+        "bytes": 0,
+        "drops": 0,
+        "errors": 0,
+        "packets": 0
+    },
+    "tx": {
+        "bytes": 0,
+        "drops": 0,
+        "errors": 0,
+        "packets": 0
+    }
 }
 ````
