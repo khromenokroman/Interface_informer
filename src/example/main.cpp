@@ -28,7 +28,7 @@ int main() {
 
         connection_sample->disable_interface("eth0");
 
-        std::cout << "Show info for 'eth0' in namespace 'sample'" << std::endl << std::endl;
+        std::cout << "Show info for 'eth0' in namespace 'sample'" << std::endl;
 
         auto const new_answer_after_down = connection_sample->get_interface_info("eth0");
         std::cout << new_answer_after_down.dump(4) << std::endl;
