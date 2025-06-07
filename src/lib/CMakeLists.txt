@@ -11,7 +11,6 @@ link_directories(${LIBNL_LIBRARY_DIRS})
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(${LIB_NAME} SHARED
-        switch_ns.cpp
         printer.cpp
 )
 

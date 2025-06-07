@@ -3,7 +3,6 @@
 
 int main() {
     try {
-
         std::cout << "All namespaces:\n";
         auto const all_ns = ::os::network::InformerNetlink::get_network_namespaces();
         std::cout << all_ns.dump(4) << std::endl << std::endl;
