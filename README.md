@@ -175,10 +175,14 @@ int main() {
 }
 ````
 
+Для того чтобы не запускать программу от root можно сделать так
+````bash
+setcap cap_net_admin,cap_sys_admin+ep ./src/example/example
+````
 ### Примеры работы
 
 ````
-f-15% sudo ./src/example/example
+f-15% ./src/example/example
 All namespaces:
 {
     "namespaces": [
