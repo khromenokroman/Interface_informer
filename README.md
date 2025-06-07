@@ -149,7 +149,7 @@ ip netns exec sample ip addr add 192.168.100.2/24 dev eth0
 ip netns exec sample ip route add default via 192.168.100.1
 ````
 
-Пример кода
+Пример использующего кода
 ````c++
 #include <informer/interface_informer.hpp>
 #include <iostream>
