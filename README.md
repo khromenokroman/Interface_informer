@@ -19,7 +19,7 @@
 форматированном JSON представлении. Поддерживается работа как с интерфейсами в основном пространстве 
 имен сети, так и с интерфейсами в других доступных сетевых пространствах имен (network namespaces). 
 
-[![asciicast](https://asciinema.org/a/bicL04PaBZxyGfECpzJLc08cp.svg)](https://asciinema.org/a/bicL04PaBZxyGfECpzJLc08cp)
+[![asciicast](https://asciinema.org/a/722447.svg)](https://asciinema.org/a/722447)
 
 ### Возможности
 
