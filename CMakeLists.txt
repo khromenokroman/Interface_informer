@@ -8,9 +8,29 @@ project(interface_informer
 configure_file(Version.in Version @ONLY)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BUILD_SHARED_LIBS "Собирать динамическую библиотеку вместо статической" ON)
 option(BUILD_EXAMPLE "Собирать приложение (пример)" ON)
+
+include(GNUInstallDirs)
+set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_FULL_INCLUDEDIR} CACHE PATH "Path for headers installation")
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_FULL_LIBDIR} CACHE PATH "Path for libraries installation")
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+        interface_informer-config.cmake.in
+        interface_informer-config.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/interface_informer
+        PATH_VARS INCLUDE_INSTALL_DIR LIB_INSTALL_DIR
+)
+
+write_basic_package_version_file(
+        interface_informer-configVersion.cmake
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
+)
 
 if (BUILD_EXAMPLE)
     add_subdirectory(src/example)

@@ -1,0 +1,18 @@
+set(INFORMER_VERSION "@PROJECT_VERSION@")
+
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(fmt REQUIRED)
+find_dependency(PkgConfig REQUIRED)
+
+# Проверяем доступность libnl через pkg-config
+pkg_check_modules(LIBNL REQUIRED libnl-3.0 libnl-route-3.0)
+
+set_and_check(INFORMER_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
+set_and_check(INFORMER_LIB_DIR "@PACKAGE_LIB_INSTALL_DIR@")
+
+# Подключаем файл с экспортированными целями
+include("${CMAKE_CURRENT_LIST_DIR}/interface_informerTargets.cmake")
+
+check_required_components(interface_informer)
