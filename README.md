@@ -97,7 +97,7 @@ cmake -DBUILD_SHARED_LIBS=OFF -DBUILD_EXAMPLE=OFF ..
 make
 ```
 
-Для создания пакета DEB:
+#### Для создания пакета DEB:
 
 ````bash
 cd build
