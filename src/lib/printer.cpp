@@ -104,23 +104,9 @@ std::string ShowInfoInterface::arp_hrd_type_to_string(unsigned int const type) {
             return "Неизвестный (" + std::to_string(type) + ")";
     }
 }
-std::string ShowInfoInterface::format_size(uint64_t const bytes) {
-    const char *suffixes[] = {"B", "KB", "MB", "GB", "TB", "PB"};
-    auto size = static_cast<double>(bytes);
-    int suffix_index = 0;
 
-    while (size >= 1024 && suffix_index < 5) {
-        size /= 1024;
-        suffix_index++;
-    }
-
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(suffix_index > 0 ? 2 : 0) << size << " " << suffixes[suffix_index];
-    return oss.str();
-}
 void ShowInfoInterface::print_interface_details(rtnl_link *link) {
-    char if_name[IFNAMSIZ];
-    snprintf(if_name, IFNAMSIZ, "%s", rtnl_link_get_name(link));
+    std::string const if_name = rtnl_link_get_name(link);
 
     m_json.interface = if_name;
 
@@ -200,8 +186,7 @@ void ShowInfoInterface::print_interface_details(rtnl_link *link) {
         m_json.hw.size_queue = txq_len;
     }
 
-    unsigned int const oper_state = rtnl_link_get_operstate(link);
-    switch (oper_state) {
+    switch (rtnl_link_get_operstate(link)) {
         case IF_OPER_UNKNOWN:
             m_json.operational_status.oper_state = "UNKNOWN";
             break;
@@ -227,8 +212,7 @@ void ShowInfoInterface::print_interface_details(rtnl_link *link) {
             m_json.operational_status.oper_state = "UNDEFINED";
     }
 
-    unsigned int const link_mode = rtnl_link_get_linkmode(link);
-    switch (link_mode) {
+    switch (rtnl_link_get_linkmode(link)) {
         case IF_LINK_MODE_DEFAULT:
             m_json.operational_status.link_mode = "DEFAULT";
             break;
@@ -257,15 +241,11 @@ void ShowInfoInterface::print_address_info(rtnl_addr *addr) {
     char ip_str[100];
     nl_addr2str(local, ip_str, sizeof(ip_str));
 
-    std::string family_str;
     if (family == AF_INET) {
-        family_str = "IPv4";
         ip.type = "IPv4";
     } else if (family == AF_INET6) {
-        family_str = "IPv6";
         ip.type = "IPv6";
     } else {
-        family_str = "Неизвестный (" + std::to_string(family) + ")";
     }
 
     ip.ip = ip_str;
@@ -324,8 +304,6 @@ void ShowInfoInterface::print_address_info(rtnl_addr *addr) {
     m_json.ip.emplace_back(ip);
 }
 void ShowInfoInterface::print_neighbour_info(int const ifindex) {
-    bool has_neighbours = false;
-
     Neigh neigh_json;
 
     for (auto obj = nl_cache_get_first(m_neigh_data.get()); obj; obj = nl_cache_get_next(obj)) {
@@ -333,10 +311,6 @@ void ShowInfoInterface::print_neighbour_info(int const ifindex) {
 
         if (rtnl_neigh_get_ifindex(neigh) != ifindex) {
             continue;
-        }
-
-        if (!has_neighbours) {
-            has_neighbours = true;
         }
 
         auto const dst = rtnl_neigh_get_dst(neigh);
@@ -383,13 +357,8 @@ void ShowInfoInterface::print_neighbour_info(int const ifindex) {
         }
         m_json.neigh.emplace_back(neigh_json);
     }
-
-    if (!has_neighbours) {
-    }
 }
 void ShowInfoInterface::print_routes_for_interface(int const ifindex) {
-    bool has_routes = false;
-
     Routes routes;
 
     for (auto obj = nl_cache_get_first(m_route_data.get()); obj; obj = nl_cache_get_next(obj)) {
@@ -407,10 +376,6 @@ void ShowInfoInterface::print_routes_for_interface(int const ifindex) {
 
         if (!route_for_interface) {
             continue;
-        }
-
-        if (!has_routes) {
-            has_routes = true;
         }
 
         auto const dst = rtnl_route_get_dst(route);
@@ -481,49 +446,19 @@ void ShowInfoInterface::print_routes_for_interface(int const ifindex) {
 
         m_json.routes.emplace_back(routes);
     }
-
-    if (!has_routes) {
-    }
 }
-void ShowInfoInterface::show() {
-    for (auto obj = nl_cache_get_first(m_link_data.get()); obj; obj = nl_cache_get_next(obj)) {
-        auto const link = reinterpret_cast<struct rtnl_link *>(obj);
 
-        print_interface_details(link);
-
-        int const ifindex = rtnl_link_get_ifindex(link);
-
-        bool has_addresses = false;
-
-        for (auto addr_obj = nl_cache_get_first(m_addr_data.get()); addr_obj; addr_obj = nl_cache_get_next(addr_obj)) {
-            if (auto const addr = reinterpret_cast<struct rtnl_addr *>(addr_obj); rtnl_addr_get_ifindex(addr) == ifindex) {
-                print_address_info(addr);
-                has_addresses = true;
-            }
-        }
-
-        if (!has_addresses) {
-        }
-
-        print_neighbour_info(ifindex);
-
-        print_routes_for_interface(ifindex);
-
-        std::cout << "\n";
-    }
-}
 void ShowInfoInterface::showInterface(const std::string &interface_name) {
-    int ifindex = getInterfaceIndex(interface_name);
+    int const ifindex = getInterfaceIndex(interface_name);
 
     showInterfaceByIndex(ifindex);
 }
 
-int ShowInfoInterface::getInterfaceIndex(const std::string &interface_name) {
+int ShowInfoInterface::getInterfaceIndex(const std::string &interface_name) const {
     for (auto obj = nl_cache_get_first(m_link_data.get()); obj; obj = nl_cache_get_next(obj)) {
         auto const link = reinterpret_cast<struct rtnl_link *>(obj);
-        const char *if_name = rtnl_link_get_name(link);
 
-        if (if_name && interface_name == if_name) {
+        if (char const *if_name = rtnl_link_get_name(link); if_name && interface_name == if_name) {
             return rtnl_link_get_ifindex(link);
         }
     }
@@ -534,8 +469,7 @@ int ShowInfoInterface::getInterfaceIndex(const std::string &interface_name) {
 void ShowInfoInterface::showInterfaceByIndex(int ifindex) {
     rtnl_link *link = nullptr;
     for (auto obj = nl_cache_get_first(m_link_data.get()); obj; obj = nl_cache_get_next(obj)) {
-        auto current_link = reinterpret_cast<struct rtnl_link *>(obj);
-        if (rtnl_link_get_ifindex(current_link) == ifindex) {
+        if (auto const current_link = reinterpret_cast<struct rtnl_link *>(obj); rtnl_link_get_ifindex(current_link) == ifindex) {
             link = current_link;
             break;
         }
@@ -547,12 +481,9 @@ void ShowInfoInterface::showInterfaceByIndex(int ifindex) {
 
     print_interface_details(link);
 
-    bool has_addresses = false;
-
     for (auto addr_obj = nl_cache_get_first(m_addr_data.get()); addr_obj; addr_obj = nl_cache_get_next(addr_obj)) {
         if (auto const addr = reinterpret_cast<struct rtnl_addr *>(addr_obj); rtnl_addr_get_ifindex(addr) == ifindex) {
             print_address_info(addr);
-            has_addresses = true;
         }
     }
 

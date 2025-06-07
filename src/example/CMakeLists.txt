@@ -1,4 +1,4 @@
-set(APP_NAME printer)
+set(APP_NAME example)
 
 find_package(fmt REQUIRED)
 
@@ -9,9 +9,4 @@ add_executable(${APP_NAME}
 target_link_libraries(${APP_NAME} PRIVATE
         interface_informer
         fmt::fmt
-)
-
-install(TARGETS ${APP_NAME}
-        COMPONENT bin
-        RUNTIME DESTINATION bin
 )

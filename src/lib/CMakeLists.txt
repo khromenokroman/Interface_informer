@@ -23,13 +23,15 @@ set_target_properties(${LIB_NAME} PROPERTIES
 target_link_libraries(${LIB_NAME} PRIVATE
         ${LIBNL_LIBRARIES}
         fmt::fmt
-        boost_program_options
 )
 
 install(DIRECTORY ${INCLUDE_DIR}/
         COMPONENT dev
-        DESTINATION include)
+        DESTINATION include
+)
 
 install(TARGETS ${LIB_NAME}
-        RUNTIME DESTINATION lib
+        COMPONENT lib
+        LIBRARY DESTINATION lib
+        NAMELINK_COMPONENT dev
 )

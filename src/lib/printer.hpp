@@ -123,8 +123,7 @@ class ShowInfoInterface final : public InformerNetlink {
     ::nlohmann::json get_all_interfaces() override;
 
    private:
-    std::string arp_hrd_type_to_string(unsigned int type);
-    std::string format_size(uint64_t bytes);
+    static std::string arp_hrd_type_to_string(unsigned int type);
     void print_interface_details(rtnl_link *link);
     void print_address_info(rtnl_addr *addr);
     void print_neighbour_info(int ifindex);
@@ -145,7 +144,7 @@ class ShowInfoInterface final : public InformerNetlink {
      * @return Индекс интерфейса
      * @throw exceptions::InterfaceNotFound если интерфейс не найден
      */
-    [[nodiscard]] int getInterfaceIndex(const std::string &interface_name);
+    [[nodiscard]] int getInterfaceIndex(const std::string &interface_name) const;
 
     /**
      * @brief Показать детальную информацию о конкретном интерфейсе
