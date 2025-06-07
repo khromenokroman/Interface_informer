@@ -31,6 +31,12 @@
   - Таблица соседей (кэш ARP/NDP) с информацией о состоянии связей
   - Таблица маршрутизации с детализацией по интерфейсам
 
+- **Управление сетевыми интерфейсами**:
+    - Включение (активация) сетевых интерфейсов
+    - Выключение (деактивация) сетевых интерфейсов
+    - Возможность управления интерфейсами как в основном пространстве имен, так и в других сетевых пространствах
+    - Автоматическое обновление кэша данных после изменения состояния интерфейса
+
 - **Работа с сетевыми пространствами имен**:
   - Перечисление доступных сетевых пространств имен системы
   - Переключение между пространствами имен для сбора информации
@@ -154,7 +160,7 @@ int main() {
 
         std::cout << "All interfaces (main):\n";
         auto const all_interfaces = connection->get_all_interfaces();
-        std::cout << all_interfaces.dump(4) << std::endl<< std::endl;
+        std::cout << all_interfaces.dump(4) << std::endl << std::endl;
 
         std::cout << "Switch to namespace 'sample'!" << std::endl;
         ::os::network::InformerNetlink::switch_to_namespace("sample");
@@ -165,7 +171,16 @@ int main() {
 
         std::cout << "Show info for 'eth0' in namespace 'sample'" << std::endl;
         auto const answer = connection_sample->get_interface_info("eth0");
-        std::cout << answer.dump(4) << std::endl;
+        std::cout << answer.dump(4) << std::endl << std::endl;
+
+        std::cout << "Disable interface 'eth0' in namespace 'sample'" << std::endl << std::endl;
+
+        connection_sample->disable_interface("eth0");
+
+        std::cout << "Show info for 'eth0' in namespace 'sample'" << std::endl << std::endl;
+
+        auto const new_answer_after_down = connection_sample->get_interface_info("eth0");
+        std::cout << new_answer_after_down.dump(4) << std::endl;
 
         return 0;
     } catch (std::exception const &ex) {
@@ -196,9 +211,9 @@ All interfaces (main):
         "lo",
         "wlp0s20f3",
         "br-cc1332e4f8fd",
-        "docker0",
         "veth0",
-        "tun0"
+        "docker0",
+        "roma-bk"
     ]
 }
 
@@ -215,12 +230,11 @@ Show info for 'eth0' in namespace 'sample'
 {
     "general": {
         "flags": [
-            "UP",
             "BROADCAST",
             "MULTICAST"
         ],
         "index": 493,
-        "state": "UP",
+        "state": "DOWN",
         "type": "BROADCAST"
     },
     "hw": {
@@ -249,7 +263,7 @@ Show info for 'eth0' in namespace 'sample'
     "neigh": [],
     "operational_status": {
         "link_mode": "DEFAULT",
-        "oper_state": "LOWER LAYER DOWN"
+        "oper_state": "DOWN"
     },
     "protocols": {
         "multicast": true,
@@ -257,12 +271,77 @@ Show info for 'eth0' in namespace 'sample'
     },
     "routes": [
         {
-            "destination": "192.168.100.0/24",
+            "destination": "192.168.100.2",
             "gateway": "direct",
             "metric": 0,
-            "table": 254,
-            "type": "UNICAST"
+            "table": 255,
+            "type": "LOCAL"
+        }
+    ]
+}
+
+Disable interface 'eth0' in namespace 'sample'
+
+Show info for 'eth0' in namespace 'sample'
+
+{
+    "general": {
+        "flags": [
+            "BROADCAST",
+            "MULTICAST",
+            "BROADCAST",
+            "MULTICAST"
+        ],
+        "index": 493,
+        "state": "DOWN",
+        "type": "BROADCAST"
+    },
+    "hw": {
+        "mac": [
+            "ba:2a:bf:ab:6c:2f",
+            "ba:2a:bf:ab:6c:2f"
+        ],
+        "mtu": 1500,
+        "size_queue": 1000,
+        "type": "Ethernet"
+    },
+    "interface": "eth0",
+    "ip": [
+        {
+            "broadcast": "",
+            "flags": [
+                "PERMANENT"
+            ],
+            "ip": "192.168.100.2/24",
+            "masc": 24,
+            "peer": "",
+            "pref_lft": 0,
+            "type": "IPv4",
+            "valid_lft": 0
         },
+        {
+            "broadcast": "",
+            "flags": [
+                "PERMANENT"
+            ],
+            "ip": "192.168.100.2/24",
+            "masc": 24,
+            "peer": "",
+            "pref_lft": 0,
+            "type": "IPv4",
+            "valid_lft": 0
+        }
+    ],
+    "neigh": [],
+    "operational_status": {
+        "link_mode": "DEFAULT",
+        "oper_state": "DOWN"
+    },
+    "protocols": {
+        "multicast": true,
+        "routing_ipv4": true
+    },
+    "routes": [
         {
             "destination": "192.168.100.2",
             "gateway": "direct",
@@ -271,11 +350,11 @@ Show info for 'eth0' in namespace 'sample'
             "type": "LOCAL"
         },
         {
-            "destination": "192.168.100.255",
+            "destination": "192.168.100.2",
             "gateway": "direct",
             "metric": 0,
             "table": 255,
-            "type": "BROADCAST"
+            "type": "LOCAL"
         }
     ]
 }

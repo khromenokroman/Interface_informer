@@ -60,6 +60,49 @@ ShowInfoInterface::ShowInfoInterface()
     }
     m_neigh_data.reset(tmp_neigh_data);
 }
+void ShowInfoInterface::enable_interface(std::string const &interface_name) {
+    int const ifindex = getInterfaceIndex(interface_name);
+
+    rtnl_link *link = rtnl_link_get(m_link_data.get(), ifindex);
+    if (!link) {
+        throw exceptions::InterfaceNotFound(::fmt::format("Интерфейс {} не найден", interface_name));
+    }
+
+    rtnl_link *change = rtnl_link_alloc();
+    rtnl_link_set_flags(change, IFF_UP);
+
+    int const ret = rtnl_link_change(m_netlink_socket.get(), link, change, 0);
+    rtnl_link_put(link);
+    rtnl_link_put(change);
+
+    if (ret < 0) {
+        throw exceptions::InterfaceOperationEx(::fmt::format("Не удалось включить интерфейс {}: {}", interface_name, nl_geterror(ret)));
+    }
+
+    nl_cache_refill(m_netlink_socket.get(), m_link_data.get());
+}
+
+void ShowInfoInterface::disable_interface(std::string const &interface_name) {
+    int const ifindex = getInterfaceIndex(interface_name);
+
+    rtnl_link *link = rtnl_link_get(m_link_data.get(), ifindex);
+    if (!link) {
+        throw exceptions::InterfaceNotFound(::fmt::format("Интерфейс {} не найден", interface_name));
+    }
+
+    rtnl_link *change = rtnl_link_alloc();
+    rtnl_link_unset_flags(change, IFF_UP);
+
+    int const ret = rtnl_link_change(m_netlink_socket.get(), link, change, 0);
+    rtnl_link_put(link);
+    rtnl_link_put(change);
+
+    if (ret < 0) {
+        throw exceptions::InterfaceOperationEx(::fmt::format("Не удалось выключить интерфейс {}: {}", interface_name, nl_geterror(ret)));
+    }
+
+    nl_cache_refill(m_netlink_socket.get(), m_link_data.get());
+}
 nlohmann::json ShowInfoInterface::get_interface_info(std::string const &interface_name) {
     try {
         showInterface(interface_name);

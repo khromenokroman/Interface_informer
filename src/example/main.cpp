@@ -11,7 +11,7 @@ int main() {
 
         std::cout << "All interfaces (main):\n";
         auto const all_interfaces = connection->get_all_interfaces();
-        std::cout << all_interfaces.dump(4) << std::endl<< std::endl;
+        std::cout << all_interfaces.dump(4) << std::endl << std::endl;
 
         std::cout << "Switch to namespace 'sample'!" << std::endl;
         ::os::network::InformerNetlink::switch_to_namespace("sample");
@@ -22,7 +22,16 @@ int main() {
 
         std::cout << "Show info for 'eth0' in namespace 'sample'" << std::endl;
         auto const answer = connection_sample->get_interface_info("eth0");
-        std::cout << answer.dump(4) << std::endl;
+        std::cout << answer.dump(4) << std::endl << std::endl;
+
+        std::cout << "Disable interface 'eth0' in namespace 'sample'" << std::endl << std::endl;
+
+        connection_sample->disable_interface("eth0");
+
+        std::cout << "Show info for 'eth0' in namespace 'sample'" << std::endl << std::endl;
+
+        auto const new_answer_after_down = connection_sample->get_interface_info("eth0");
+        std::cout << new_answer_after_down.dump(4) << std::endl;
 
         return 0;
     } catch (std::exception const &ex) {

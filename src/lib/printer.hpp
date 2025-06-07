@@ -178,6 +178,14 @@ struct GetDataNeigh final : NetlinkEx {
 struct InterfaceNotFound final : NetlinkEx {
     using NetlinkEx::NetlinkEx;
 };
+
+/**
+ * @struct InterfaceOperationEx
+ * @brief Исключение при ошибке операции с интерфейсом (включение/выключение)
+ */
+struct InterfaceOperationEx final : NetlinkEx {
+    using NetlinkEx::NetlinkEx;
+};
 } // namespace exceptions
 
 /**
@@ -207,6 +215,21 @@ class ShowInfoInterface final : public InformerNetlink {
     ShowInfoInterface &operator=(ShowInfoInterface const &) = delete;
     ShowInfoInterface &operator=(ShowInfoInterface &&) = delete;
 
+    /**
+     * @brief Включает указанный сетевой интерфейс.
+     * @param interface_name Имя интерфейса для включения.
+     * @throw exceptions::InterfaceOperationEx если операция не удалась.
+     * @throw exceptions::InterfaceNotFound если интерфейс не найден.
+     */
+    void enable_interface(std::string const &interface_name) override;
+
+    /**
+     * @brief Выключает указанный сетевой интерфейс.
+     * @param interface_name Имя интерфейса для выключения.
+     * @throw exceptions::InterfaceOperationEx если операция не удалась.
+     * @throw exceptions::InterfaceNotFound если интерфейс не найден.
+     */
+    void disable_interface(std::string const &interface_name) override;
     /**
      * @brief Получает информацию об указанном интерфейсе
      * @param interface_name Имя интерфейса

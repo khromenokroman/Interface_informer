@@ -60,6 +60,18 @@ class InformerNetlink {
     InformerNetlink &operator=(InformerNetlink &&) = delete;
 
     /**
+     * @brief Включает указанный сетевой интерфейс.
+     * @param interface_name Имя интерфейса для включения.
+     * @throw exceptions::InterfaceOperationEx если операция не удалась.
+     */
+    virtual void enable_interface(std::string const &interface_name) = 0;
+    /**
+     * @brief Выключает указанный сетевой интерфейс.
+     * @param interface_name Имя интерфейса для выключения.
+     * @throw exceptions::InterfaceOperationEx если операция не удалась.
+     */
+    virtual void disable_interface(std::string const &interface_name) = 0;
+    /**
      * @brief Получает подробную информацию о конкретном сетевом интерфейсе.
      * @param interface_name Имя интерфейса, о котором нужно получить информацию.
      * @return JSON-объект с детальной информацией об интерфейсе.
