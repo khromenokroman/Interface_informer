@@ -73,78 +73,114 @@ sudo make install
 sudo dpkg -i printer*.deb
 ````
 
-### Использование
-
+Добавим тестовый namespace **'sample''** и интерфейс **eth0**
 ````bash
-# Показать все доступные пространства имен
-./printer -a
-
-# Показать только текущее пространство имен (по умолчанию)
-./printer -c
-
-# Показать указанные пространства имен
-./printer -s netns1 netns2
-
-# Не показывать текущее пространство имен
-./printer -n -s netns1 netns2
-
-# Показать информацию только по конкретному интерфейсу
-./printer -i eth0
-
-# Показать конкретный интерфейс в указанном пространстве имен
-./printer -i eth0 -s netns1
+ip netns add sample
+ip link add veth0 type veth peer name veth1
+ip link set veth1 netns sample
+ip netns exec sample ip link set veth1 name eth0
+ip netns exec sample ip link set lo up
+ip netns exec sample ip link set eth0 up
+ip netns exec sample ip addr add 192.168.100.2/24 dev eth0
+ip netns exec sample ip route add default via 192.168.100.1
 ````
 
-### Опции командной строки
+### Примеры работы
+````json
+All namespaces:
+{
+    "namespaces": [
+        "sample"
+    ]
+}
 
-| Опция              | Описание                                                       |
-|--------------------|----------------------------------------------------------------|
-| `-h, --help`       | Показать справку                                               |
-| `-a, --all`        | Показать информацию обо всех сетевых пространствах имен        |
-| `-c, --current`    | Показать информацию о текущем пространстве имен (по умолчанию) |
-| `-n, --no-current` | Не показывать информацию о текущем пространстве имен           |
-| `-i, --interface`  | Показать информацию только о конкретном интерфейсе             |
-| `-s, --namespace`  | Конкретные пространства имен для отображения                   |
+All interfaces (main):
+{
+    "interfaces": [
+        "lo",
+        "wlp0s20f3",
+        "br-cc1332e4f8fd",
+        "docker0",
+        "veth0",
+        "tun0"
+    ]
+}
 
-### Примеры вывода (Информация об интерфейсе)
-````
-==================================================================
-ИНТЕРФЕЙС: eth0
-==================================================================
-ОСНОВНАЯ ИНФОРМАЦИЯ:
-  Индекс: 2
-  Состояние: АКТИВЕН (UP)
-  Тип интерфейса: BROADCAST
-  Флаги: UP BROADCAST RUNNING MULTICAST 
+Switch to namespace 'sample'!
+All interfaces namespace 'sample':
+{
+    "interfaces": [
+        "lo",
+        "eth0"
+    ]
+}
 
-АППАРАТНАЯ ИНФОРМАЦИЯ:
-  Тип аппаратного адреса: Ethernet
-  MAC-адрес: 00:11:22:33:44:55
-  MTU: 1500 байт
-  Длина очереди передачи: 1000
-
-ОПЕРАЦИОННОЕ СОСТОЯНИЕ:
-  Состояние: UP
-  Режим соединения: DEFAULT
-
-СТАТИСТИКА ИНТЕРФЕЙСА:
-  Получено:
-    Байт: 1234567890 (1.15 GB)
-    Пакетов: 8765432
-    Ошибок: 0
-    Отброшенных: 12
-  Отправлено:
-    Байт: 9876543210 (9.20 GB)
-    Пакетов: 7654321
-    Ошибок: 0
-    Отброшенных: 5
-
-ПРОТОКОЛЫ:
-  Маршрутизация IPv4: Включена
-  Multicast: Включен
-
-IP-АДРЕСА:
-  IPv4: 192.168.1.10/24 [PERMANENT]
-    Broadcast: 192.168.1.255
-  IPv6: fe80::211:22ff:fe33:4455/64 [PERMANENT]
+Show info for 'eth0' in namespace 'sample'
+{
+    "general": {
+        "flags": [
+            "UP",
+            "BROADCAST",
+            "MULTICAST"
+        ],
+        "index": 493,
+        "state": "UP",
+        "type": "BROADCAST"
+    },
+    "hw": {
+        "mac": [
+            "ba:2a:bf:ab:6c:2f"
+        ],
+        "mtu": 1500,
+        "size_queue": 1000,
+        "type": "Ethernet"
+    },
+    "interface": "eth0",
+    "ip": [
+        {
+            "broadcast": "",
+            "flags": [
+                "PERMANENT"
+            ],
+            "ip": "192.168.100.2/24",
+            "masc": 24,
+            "peer": "",
+            "pref_lft": 0,
+            "type": "IPv4",
+            "valid_lft": 0
+        }
+    ],
+    "neigh": [],
+    "operational_status": {
+        "link_mode": "DEFAULT",
+        "oper_state": "LOWER LAYER DOWN"
+    },
+    "protocols": {
+        "multicast": true,
+        "routing_ipv4": true
+    },
+    "routes": [
+        {
+            "destination": "192.168.100.0/24",
+            "gateway": "direct",
+            "metric": 0,
+            "table": 254,
+            "type": "UNICAST"
+        },
+        {
+            "destination": "192.168.100.2",
+            "gateway": "direct",
+            "metric": 0,
+            "table": 255,
+            "type": "LOCAL"
+        },
+        {
+            "destination": "192.168.100.255",
+            "gateway": "direct",
+            "metric": 0,
+            "table": 255,
+            "type": "BROADCAST"
+        }
+    ]
+}
 ````
