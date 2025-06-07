@@ -175,7 +175,7 @@ int main() {
 }
 ````
 
-Для того чтобы не запускать программу от root можно сделать так
+Для того чтобы не запускать программу от **root** можно сделать так
 ````bash
 setcap cap_net_admin,cap_sys_admin+ep ./src/example/example
 ````
