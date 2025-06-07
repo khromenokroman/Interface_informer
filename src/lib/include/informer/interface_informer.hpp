@@ -1,4 +1,5 @@
 #pragma once
+#include <dirent.h>
 #include <fcntl.h>
 #include <fmt/format.h>
 
@@ -26,10 +27,11 @@ class InformerNetlink {
     InformerNetlink &operator=(InformerNetlink const &) = delete;
     InformerNetlink &operator=(InformerNetlink &&) = delete;
 
-    virtual ::nlohmann::json get_interface_info(std::string const &interface_name, std::string const &ns) = 0;
+    virtual ::nlohmann::json get_interface_info(std::string const &interface_name) = 0;
+    virtual ::nlohmann::json get_all_interfaces() = 0;
 
     static void switch_to_namespace(const std::string &name);
-
+    static ::nlohmann::json get_network_namespaces();
     static std::unique_ptr<InformerNetlink> create();
 
    private:
@@ -61,5 +63,22 @@ inline void InformerNetlink::switch_to_namespace(const std::string &name) {
     if (!result) {
         throw exceptions::SwitchNamespace(::fmt::format("Switch namespace {}", name));
     }
+}
+inline ::nlohmann::json InformerNetlink::get_network_namespaces() {
+    nlohmann::json json{};
+    nlohmann::json namespaces = nlohmann::json::array();
+    if (auto const dir = opendir("/var/run/netns")) {
+        dirent *entry = nullptr;
+        while ((entry = readdir(dir)) != nullptr) {
+            if (entry->d_name[0] != '.') {
+                namespaces.emplace_back(entry->d_name);
+            }
+        }
+        closedir(dir);
+    }
+
+    json["namespaces"] = namespaces;
+
+    return json;
 }
 } // namespace os::network

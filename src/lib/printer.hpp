@@ -14,6 +14,34 @@
 
 namespace os::network {
 
+struct Neigh {
+    std::string ip{};
+    std::string mac{};
+    std::vector<std::string> type{};
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Neigh, ip, mac, type);
+
+struct Routes {
+    std::string destination{};
+    std::string gateway{};
+    uint32_t metric{};
+    uint32_t table{};
+    std::string type{};
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Routes, destination, gateway, metric, table, type);
+
+struct Ip {
+    std::string type{};
+    std::string ip{};
+    int masc{};
+    std::vector<std::string> flags{};
+    uint32_t valid_lft{};
+    uint32_t pref_lft{};
+    std::string broadcast{};
+    std::string peer{};
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Ip, type, ip, masc, flags, valid_lft, pref_lft, broadcast, peer);
+
 struct Protocols {
     bool routing_ipv4{};
     bool multicast{};
@@ -48,8 +76,11 @@ struct Json {
     HW hw{};
     OperationalStatus operational_status{};
     Protocols protocols{};
+    std::vector<Ip> ip{};
+    std::vector<Routes> routes{};
+    std::vector<Neigh> neigh{};
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Json, interface, general, hw, operational_status, protocols);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Json, interface, general, hw, operational_status, protocols, ip, routes, neigh);
 
 namespace exceptions {
 struct NetlinkEx : std::runtime_error {
@@ -88,7 +119,8 @@ class ShowInfoInterface final : public InformerNetlink {
     ShowInfoInterface &operator=(ShowInfoInterface const &) = delete;
     ShowInfoInterface &operator=(ShowInfoInterface &&) = delete;
 
-    ::nlohmann::json get_interface_info(std::string const &interface_name, std::string const &ns) override;
+    ::nlohmann::json get_interface_info(std::string const &interface_name) override;
+    ::nlohmann::json get_all_interfaces() override;
 
    private:
     std::string arp_hrd_type_to_string(unsigned int type);
@@ -97,6 +129,7 @@ class ShowInfoInterface final : public InformerNetlink {
     void print_address_info(rtnl_addr *addr);
     void print_neighbour_info(int ifindex);
     void print_routes_for_interface(int ifindex);
+
     void show();
 
     /**
